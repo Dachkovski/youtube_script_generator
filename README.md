@@ -6,7 +6,7 @@ This service provides an API to generate YouTube scripts based on a given topic.
 
 ### Prerequisites
 
-- Python 3.9+
+- Python 3.12+
 - Docker (optional, for containerization)
 
 ### Installation
