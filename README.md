@@ -47,7 +47,7 @@ docker build -t flask-youtube-script-generator .
 
 2. Run the Docker container:
 ```bash
-docker run -p 8080:8080 flask-youtube-script-generator
+docker run -p 5001:5001 flask-youtube-script-generator
 ```
 
 ## Usage
