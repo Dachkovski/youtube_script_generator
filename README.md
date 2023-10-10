@@ -1,12 +1,12 @@
-# Flask YouTube Script Generator
+# YouTube Script Generator API
 
-This service provides an API to generate YouTube scripts based on a given topic. It uses `autogen` with 2 agents (script writer, editor) to generate viral youtube scripts.
+This service provides an API to generate YouTube scripts based on a given topic. It uses `autogen` with 2 agents (script writer and editor) to generate viral youtube scripts.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Python 3.12+
+- Python 3.9+
 - Docker (optional, for containerization)
 
 ### Installation
@@ -36,7 +36,7 @@ pip install -r requirements.txt
 python app.py
 ```
 
-The service will start and listen on port 8080.
+The service will start and listen on port 5001.
 
 #### Using Docker:
 
@@ -52,17 +52,17 @@ docker run -p 5001:5001 flask-youtube-script-generator
 
 ## Usage
 
-Send a POST request to the `/generate_script` endpoint with the following JSON payload:
+Send a POST request to the `/submit_script_request` endpoint with the following JSON payload:
 
 ```json
 {
-    "topic": "YOUR_TOPIC_HERE",    
-    "form": "shortform/longform",
+    "topic": "YOUR_TOPIC_HERE",
+    "style": "VIDEO_STYLE",    
     "api_key": "YOUR_API_KEY_HERE"
 }
 ```
 
-The service will respond with a generated YouTube script based on the provided topic.
+The service will respond with a request ID. You can then use this ID to check the status and result of your request by making a GET request to `/get_script_result/<request_id>`.
 
 ## Contributing
 

@@ -3,6 +3,8 @@ import autogen
 import os
 import logging
 import re
+import uuid
+import threading
 
 app = Flask(__name__)
 
@@ -13,31 +15,12 @@ logging.basicConfig(level=logging.INFO)
 PORT = os.environ.get("PORT", 5001)
 
 # API Key Validation Pattern
-API_KEY_PATTERN = r"^sk-[A-Za-z0-9]{43}$"
+API_KEY_PATTERN = r"^sk-[A-Za-z0-9]{48}$"
 
-@app.route('/generate_script', methods=['POST'])
-def generate_script():
-    data = request.get_json()
+# Dictionary to store ongoing requests and their results
+ongoing_requests = {}
 
-    if not data:
-        abort(400, "Invalid data format")
-
-    topic = data.get('topic')
-    api_key = data.get('api_key')
-    form = data.get('form')
-
-    if not topic:
-        abort(400, "Missing topic in request data")
-
-    if not api_key:
-        abort(400, "Missing api_key in request data")
-
-    if not form:
-        abort(400, "Missing 'longform/shortform' in request data")
-
-    if not re.match(API_KEY_PATTERN, api_key):
-        abort(403, "Invalid API key structure")
-
+def process_request(request_id, api_key, style, topic):
     config_list = [
         {
             'model': 'gpt-4',
@@ -45,7 +28,7 @@ def generate_script():
         }
     ]
 
-    llm_config={
+    llm_config = {
         "request_timeout": 600,
         "seed": 42,
         "config_list": config_list,
@@ -77,12 +60,65 @@ def generate_script():
     groupchat = autogen.GroupChat(agents=[user_proxy, editor, writer], messages=[], max_round=12)
     manager = autogen.GroupChatManager(groupchat=groupchat, llm_config=llm_config)
 
-    task = f"Give me a viral youtube {form} script about current events about the topic: '{topic}'. Separate the scipt into scenes. Each scene is sperarated by a ';'. Only output the script text. Don't output any meta descriptions like 'scene:' oder (opening shot) etc.', just the text. Make sure the topic is trending and edited."
+    task = f"Give me a viral youtube {style} script about current events about the topic: '{topic}'. Separate the script into scenes. Each scene is separated by a ';'. Only output the script text. Don't output any meta descriptions like 'scene:' or (opening shot) etc., just the text. Make sure the topic is trending and edited."
+
+    user_proxy.initiate_chat(manager, message=task)
+
+    ongoing_requests[request_id]['result'] = groupchat.messages[-2]['content'].strip('\n')
+    ongoing_requests[request_id]['status'] = 'completed'
 
 
-    result = user_proxy.initiate_chat(manager, message=task)
+@app.route('/submit_script_request', methods=['POST'])
+def submit_script_request():
+    data = request.get_json()
 
-    return jsonify(result)
+    if not data:
+        abort(400, "Invalid data format")
+
+    topic = data.get('topic')
+    style = data.get('style')
+    api_key = data.get('api_key')
+
+    if not topic:
+        abort(400, "Missing topic in request data")
+
+    if not api_key:
+        abort(400, "Missing api_key in request data")
+
+    if not style:
+        abort(400, "Missing 'longform/shortform' in request data")
+
+    if not re.match(API_KEY_PATTERN, api_key):
+        abort(403, "Invalid API key structure")
+
+    # Generate a unique ID for this request
+    request_id = str(uuid.uuid4())
+
+    # Store the request data in the dictionary with a 'processing' status
+    ongoing_requests[request_id] = {
+        'status': 'processing',
+        'result': None
+    }
+
+    # Start a new thread to process the request in the background
+    thread = threading.Thread(target=process_request, args=(request_id, api_key, style, topic))
+    thread.start()
+
+    # Return the unique ID to the client
+    return jsonify(request_id=request_id)
+
+
+@app.route('/get_script_result/<request_id>', methods=['GET'])
+def get_script_result(request_id):
+    request_data = ongoing_requests.get(request_id)
+
+    if not request_data:
+        abort(404, "Request ID not found")
+
+    if request_data['status'] == 'processing':
+        return jsonify(status='processing')
+
+    return jsonify(status='completed', result=request_data['result'])
 
 @app.errorhandler(400)
 def bad_request(error):
@@ -91,6 +127,10 @@ def bad_request(error):
 @app.errorhandler(403)
 def forbidden(error):
     return jsonify(error=str(error)), 403
+
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify(error=str(error)), 404
 
 @app.errorhandler(500)
 def internal_server_error(error):
