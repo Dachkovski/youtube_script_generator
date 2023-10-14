@@ -86,7 +86,7 @@ def submit_script_request():
         abort(400, "Missing api_key in request data")
 
     if not style:
-        abort(400, "Missing 'longform/shortform' in request data")
+        abort(400, "Missing style in request data")
 
     if not re.match(API_KEY_PATTERN, api_key):
         abort(403, "Invalid API key structure")
