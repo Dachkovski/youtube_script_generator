@@ -71,6 +71,7 @@ def process_request(request_id, api_key, style, topic):
 @app.route('/submit_script_request', methods=['POST'])
 def submit_script_request():
     data = request.get_json()
+    logging.info(f"Received request data: {data}")
 
     if not data:
         abort(400, "Invalid data format")
@@ -104,21 +105,28 @@ def submit_script_request():
     thread = threading.Thread(target=process_request, args=(request_id, api_key, style, topic))
     thread.start()
 
+    response = jsonify(request_id=request_id)
+    logging.info(f"Response data: {response.get_json()}")
     # Return the unique ID to the client
-    return jsonify(request_id=request_id)
+    return response
 
 
 @app.route('/get_script_result/<request_id>', methods=['GET'])
 def get_script_result(request_id):
+    logging.info(f"Received request for ID: {request_id}")
     request_data = ongoing_requests.get(request_id)
 
     if not request_data:
         abort(404, "Request ID not found")
 
     if request_data['status'] == 'processing':
-        return jsonify(status='processing')
+        response = jsonify(status='processing')
+        logging.info(f"Response data: {response.get_json()}")
+        return response
 
-    return jsonify(status='completed', result=request_data['result'])
+    response = jsonify(status='completed', result=request_data['result'])
+    logging.info(f"Response data: {response.get_json()}")
+    return response
 
 @app.errorhandler(400)
 def bad_request(error):
