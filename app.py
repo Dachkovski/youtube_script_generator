@@ -142,7 +142,7 @@ def not_found(error):
 
 @app.errorhandler(500)
 def internal_server_error(error):
-    return jsonify(error="Internal Server Error"), 500
+    return jsonify(error=str(error)), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=PORT)
