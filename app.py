@@ -62,7 +62,7 @@ def process_request(request_id, api_key, style, topic):
 
     task = f"Give me a viral youtube {style} script about current events about the topic: '{topic}'. Separate the script into scenes. Each scene is separated by a ';'. Only output the script text. Don't output any meta descriptions like 'scene:' or (opening shot) etc., just the text. Make sure the topic is trending and edited."
 
-    user_proxy.initiate_chat(manager, message=task)
+    user_proxy.initiate_chat(manager, message=task, clear_history=True)
 
     ongoing_requests[request_id]['result'] = groupchat.messages[-2]['content'].strip('\n')
     ongoing_requests[request_id]['status'] = 'completed'
