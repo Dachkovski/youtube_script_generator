@@ -23,7 +23,7 @@ ongoing_requests = {}
 def process_request(request_id, api_key, style, topic):
     config_list = [
         {
-            'model': 'gpt-4',
+            'model': 'gpt-4-1106-preview',
             'api_key': api_key
         }
     ]
