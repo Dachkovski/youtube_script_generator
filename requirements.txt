@@ -1,4 +1,4 @@
 Flask==3.0.0
-pyautogen==0.1.4
+pyautogen==0.2.0b3
 chardet==5.2.0
 charset-normalizer==2.1.0
