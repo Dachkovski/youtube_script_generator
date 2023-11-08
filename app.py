@@ -29,7 +29,7 @@ def process_request(request_id, api_key, style, topic):
     ]
 
     llm_config = {
-        "request_timeout": 600,
+        "timeout": 600,
         "seed": 42,
         "config_list": config_list,
         "temperature": 0
