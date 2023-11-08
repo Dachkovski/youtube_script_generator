@@ -1,2 +1,2 @@
-Flask==2.2.3
-pyautogen==0.1.14
+Flask==3.0.0
+pyautogen==0.1.4
